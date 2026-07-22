@@ -582,6 +582,7 @@
             </div>
             <form id="formulario-entrega" class="formulario-modal">
                 <input type="hidden" id="entrega-pedido-id">
+                <input type="hidden" id="entrega-modo">
                 <p class="texto-apoio" id="entrega-resumo">Selecione quando a filial deve receber este pedido.</p>
 
                 <div class="data-entrega-grid">
@@ -602,7 +603,7 @@
                 <p class="mensagem-formulario" id="mensagem-entrega" aria-live="polite"></p>
                 <div class="acoes-formulario">
                     <button type="button" class="botao-secundario" data-fechar-modal="modal-entrega">Cancelar</button>
-                    <button type="submit" class="botao-principal">Aprovar envio</button>
+                    <button type="submit" class="botao-principal" id="botao-confirmar-data">Aprovar envio</button>
                 </div>
             </form>
         </div>

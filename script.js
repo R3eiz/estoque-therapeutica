@@ -79,12 +79,15 @@ const elementos = {
     pedidoObservacao: document.querySelector("#pedido-observacao"),
     modalEntrega: document.querySelector("#modal-entrega"),
     formularioEntrega: document.querySelector("#formulario-entrega"),
+    tituloModalEntrega: document.querySelector("#titulo-modal-entrega"),
     entregaPedidoId: document.querySelector("#entrega-pedido-id"),
+    entregaModo: document.querySelector("#entrega-modo"),
     entregaResumo: document.querySelector("#entrega-resumo"),
     entregaDia: document.querySelector("#entrega-dia"),
     entregaMes: document.querySelector("#entrega-mes"),
     entregaAno: document.querySelector("#entrega-ano"),
     mensagemEntrega: document.querySelector("#mensagem-entrega"),
+    botaoConfirmarData: document.querySelector("#botao-confirmar-data"),
     botaoIrAlertas: document.querySelector("#botao-ir-alertas"),
     botaoExportar: document.querySelector("#botao-exportar"),
     arquivoImportar: document.querySelector("#arquivo-importar"),
@@ -257,8 +260,10 @@ function criarEstadoDemo() {
                     { produtoId: "prod-014", produtoNome: "Máscara cirúrgica", unidade: "Caixa", estoqueInformado: 5, quantidadeSolicitada: 20, observacao: "" }
                 ],
                 observacao: "Priorizar assim que houver compra.",
-                observacaoMatriz: "Aguardando compra para reposição da matriz.",
+                observacaoMatriz: "Aguardando compra. Chegada prevista na matriz: 24/07/2026.",
                 situacao: "aguardando_compra",
+                compraPrevista: "2026-07-24",
+                compraRecebidaEm: null,
                 criadoEm: "2026-07-21T15:10:00.000Z",
                 analisadoEm: "2026-07-21T17:05:00.000Z"
             },
@@ -414,6 +419,8 @@ function normalizarPedido(pedido) {
         observacao: String(pedido?.observacao ?? pedido?.note ?? ""),
         observacaoMatriz: String(pedido?.observacaoMatriz ?? pedido?.managerNote ?? ""),
         situacao,
+        compraPrevista: pedido?.compraPrevista ?? pedido?.purchaseExpectedAt ?? "",
+        compraRecebidaEm: pedido?.compraRecebidaEm ?? pedido?.purchaseReceivedAt ?? null,
         entregaPrevista: pedido?.entregaPrevista ?? pedido?.deliveryDate ?? "",
         recebidoEm: pedido?.recebidoEm ?? pedido?.receivedAt ?? null,
         criadoEm: pedido?.criadoEm ?? pedido?.createdAt ?? new Date().toISOString(),
@@ -848,8 +855,8 @@ function renderizarPedidos() {
     elementos.tabelaPedidos.innerHTML = pedidos.length
         ? pedidos.map((pedido) => {
             const filial = buscarFilial(pedido.filialId);
-            const aberto = pedido.situacao === "pendente" || pedido.situacao === "aguardando_compra";
             const itens = itensDoPedido(pedido);
+            const compra = pedido.compraPrevista ? `Chegada na matriz: ${formatarDataSimples(pedido.compraPrevista)}` : "";
             const entrega = pedido.entregaPrevista ? `Entrega prevista: ${formatarDataSimples(pedido.entregaPrevista)}` : "";
             const listaItens = itens.map((item) => `
                 <div class="item-pedido-resumo">
@@ -857,22 +864,29 @@ function renderizarPedidos() {
                     <span>Filial: ${formatarNumero(item.estoqueInformado)} · Pedido: ${formatarNumero(item.quantidadeSolicitada)} ${escaparHTML(item.unidade)}</span>
                 </div>
             `).join("");
-            const acoes = aberto
+            const acoes = pedido.situacao === "pendente"
                 ? `
                     <div class="acoes-tabela">
                         <button type="button" class="botao-acao acao-aprovar" data-acao="aprovar-pedido" data-pedido-id="${pedido.id}">Aprovar</button>
-                        ${pedido.situacao === "pendente" ? `<button type="button" class="botao-acao" data-acao="aguardar-compra" data-pedido-id="${pedido.id}">Comprar</button>` : ""}
+                        <button type="button" class="botao-acao" data-acao="aguardar-compra" data-pedido-id="${pedido.id}">Comprar</button>
                         <button type="button" class="botao-acao acao-perigo" data-acao="recusar-pedido" data-pedido-id="${pedido.id}">Recusar</button>
                     </div>
                 `
-                : `<span class="detalhe-celula">${[pedido.observacaoMatriz, entrega].filter(Boolean).map(escaparHTML).join(" · ") || "Finalizado"}</span>`;
+                : pedido.situacao === "aguardando_compra"
+                    ? `
+                        <div class="acoes-tabela">
+                            <button type="button" class="botao-acao acao-aprovar" data-acao="receber-compra" data-pedido-id="${pedido.id}">Receber compra</button>
+                            <button type="button" class="botao-acao acao-perigo" data-acao="recusar-pedido" data-pedido-id="${pedido.id}">Recusar</button>
+                        </div>
+                    `
+                    : `<span class="detalhe-celula">${[pedido.observacaoMatriz, compra, entrega].filter(Boolean).map(escaparHTML).join(" · ") || "Finalizado"}</span>`;
 
             return `
                 <tr>
                     <td>${formatarData(pedido.criadoEm)}</td>
                     <td><strong>${escaparHTML(filial?.nome || "Filial não identificada")}</strong></td>
                     <td>${listaItens}${pedido.observacao ? `<span class="detalhe-celula">${escaparHTML(pedido.observacao)}</span>` : ""}</td>
-                    <td><span class="selo-tipo ${classeSituacaoPedido(pedido.situacao)}">${textoSituacaoPedido(pedido.situacao)}</span>${entrega ? `<span class="detalhe-celula">${escaparHTML(entrega)}</span>` : ""}</td>
+                    <td><span class="selo-tipo ${classeSituacaoPedido(pedido.situacao)}">${textoSituacaoPedido(pedido.situacao)}</span>${compra ? `<span class="detalhe-celula">${escaparHTML(compra)}</span>` : ""}${entrega ? `<span class="detalhe-celula">${escaparHTML(entrega)}</span>` : ""}</td>
                     <td>${acoes}</td>
                 </tr>
             `;
@@ -983,6 +997,7 @@ function renderizarPortalFilial() {
 
     elementos.listaMeusPedidos.innerHTML = pedidosDaFilial.length
         ? pedidosDaFilial.sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm)).map((pedido) => {
+            const compra = pedido.compraPrevista ? formatarDataSimples(pedido.compraPrevista) : "";
             const entrega = pedido.entregaPrevista ? formatarDataSimples(pedido.entregaPrevista) : "";
             return `
                 <article class="pedido-filial-card">
@@ -1001,6 +1016,7 @@ function renderizarPortalFilial() {
                             </div>
                         `).join("")}
                     </div>
+                    ${compra ? `<p><strong>Chegada prevista na matriz:</strong> ${escaparHTML(compra)}</p>` : ""}
                     ${entrega ? `<p><strong>Entrega prevista:</strong> ${escaparHTML(entrega)}</p>` : ""}
                     ${pedido.recebidoEm ? `<p><strong>Recebido em:</strong> ${formatarData(pedido.recebidoEm)}</p>` : ""}
                     ${pedido.observacaoMatriz ? `<p><strong>Resposta da matriz:</strong> ${escaparHTML(pedido.observacaoMatriz)}</p>` : ""}
@@ -1115,6 +1131,39 @@ function preencherSeletoresEntrega(dataBase = new Date()) {
     elementos.entregaAno.value = String(anoAtual);
 }
 
+function configurarModalDataPedido(pedido, modo) {
+    const filial = buscarFilial(pedido.filialId);
+    const itens = itensDoPedido(pedido);
+    const textos = {
+        entrega: {
+            titulo: "Data prevista de entrega",
+            resumo: `Pedido para ${filial?.nome || "a filial"} com ${itens.length} item(ns). Escolha a previsão de entrega.`,
+            botao: "Aprovar envio"
+        },
+        compra: {
+            titulo: "Previsão de chegada na matriz",
+            resumo: `O pedido de ${filial?.nome || "a filial"} ficará aguardando compra. Informe quando a reposição deve chegar na matriz.`,
+            botao: "Marcar compra"
+        },
+        receber_compra: {
+            titulo: "Receber compra e enviar",
+            resumo: `Confirme que a compra chegou na matriz e escolha a previsão de entrega para ${filial?.nome || "a filial"}.`,
+            botao: "Receber e enviar"
+        }
+    }[modo];
+
+    elementos.formularioEntrega.reset();
+    elementos.entregaPedidoId.value = pedido.id;
+    elementos.entregaModo.value = modo;
+    elementos.tituloModalEntrega.textContent = textos.titulo;
+    elementos.entregaResumo.textContent = textos.resumo;
+    elementos.botaoConfirmarData.textContent = textos.botao;
+    elementos.mensagemEntrega.textContent = "";
+    preencherSeletoresEntrega(new Date());
+    abrirModal(elementos.modalEntrega);
+    setTimeout(() => elementos.entregaDia.focus(), 0);
+}
+
 function abrirModalEntrega(pedidoId) {
     const pedido = estado.pedidos.find((item) => item.id === pedidoId);
 
@@ -1131,14 +1180,23 @@ function abrirModalEntrega(pedidoId) {
         return;
     }
 
-    const filial = buscarFilial(pedido.filialId);
-    elementos.formularioEntrega.reset();
-    elementos.entregaPedidoId.value = pedido.id;
-    elementos.entregaResumo.textContent = `Pedido para ${filial?.nome || "a filial"} com ${itens.length} item(ns). Escolha a previsão de entrega.`;
-    elementos.mensagemEntrega.textContent = "";
-    preencherSeletoresEntrega(new Date());
-    abrirModal(elementos.modalEntrega);
-    setTimeout(() => elementos.entregaDia.focus(), 0);
+    configurarModalDataPedido(pedido, "entrega");
+}
+
+function abrirModalCompra(pedidoId) {
+    const pedido = estado.pedidos.find((item) => item.id === pedidoId);
+
+    if (!pedido || pedido.situacao !== "pendente") return;
+
+    configurarModalDataPedido(pedido, "compra");
+}
+
+function abrirModalReceberCompra(pedidoId) {
+    const pedido = estado.pedidos.find((item) => item.id === pedidoId);
+
+    if (!pedido || pedido.situacao !== "aguardando_compra") return;
+
+    configurarModalDataPedido(pedido, "receber_compra");
 }
 
 function arquivarProduto(produtoId) {
@@ -1222,6 +1280,70 @@ function aprovarPedido(pedidoId, dataEntrega) {
     notificar("Pedido aprovado. Estoque da matriz baixado e entrega informada à filial.");
 }
 
+function receberCompraMatriz(pedidoId, dataEntrega) {
+    const pedido = estado.pedidos.find((item) => item.id === pedidoId);
+
+    if (!pedido || pedido.situacao !== "aguardando_compra") return;
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dataEntrega) || Number.isNaN(new Date(`${dataEntrega}T12:00:00`).getTime())) {
+        elementos.mensagemEntrega.textContent = "Escolha uma data válida para entrega à filial.";
+        return;
+    }
+
+    const filial = buscarFilial(pedido.filialId);
+    const itens = itensDoPedido(pedido);
+    const confirmou = window.confirm(`Confirmar chegada da compra na matriz e enviar ${itens.length} item(ns) para ${filial?.nome || "a filial"}?`);
+
+    if (!confirmou) return;
+
+    const agora = new Date().toISOString();
+    pedido.compraRecebidaEm = agora;
+    pedido.situacao = "em_transito";
+    pedido.entregaPrevista = dataEntrega;
+    pedido.recebidoEm = null;
+    pedido.analisadoEm = agora;
+    pedido.observacaoMatriz = `Compra recebida na matriz. Envio para filial com entrega prevista: ${formatarDataSimples(dataEntrega)}.`;
+
+    itens.forEach((item) => {
+        const produto = buscarProduto(item.produtoId);
+        if (!produto) return;
+
+        const saldoAntesCompra = produto.quantidade;
+        produto.quantidade += item.quantidadeSolicitada;
+        produto.atualizadoEm = agora;
+
+        registrarMovimentacao({
+            produto,
+            tipo: "entrada",
+            quantidade: item.quantidadeSolicitada,
+            saldoAntes: saldoAntesCompra,
+            saldoDepois: produto.quantidade,
+            observacao: `Compra recebida na matriz para atender pedido da filial ${filial?.nome || ""}.`.trim(),
+            filialId: pedido.filialId,
+            pedidoId: pedido.id
+        });
+
+        const saldoAntesEnvio = produto.quantidade;
+        produto.quantidade -= item.quantidadeSolicitada;
+
+        registrarMovimentacao({
+            produto,
+            tipo: "transferencia",
+            quantidade: item.quantidadeSolicitada,
+            saldoAntes: saldoAntesEnvio,
+            saldoDepois: produto.quantidade,
+            observacao: item.observacao || pedido.observacao || `Envio criado após recebimento da compra. Entrega prevista: ${formatarDataSimples(dataEntrega)}.`,
+            filialId: pedido.filialId,
+            pedidoId: pedido.id
+        });
+    });
+
+    salvarEstado();
+    fecharModal(elementos.modalEntrega);
+    renderizarTudo();
+    notificar("Compra recebida, estoque da matriz alimentado e envio para filial criado.");
+}
+
 function confirmarRecebimentoPedido(pedidoId) {
     const pedido = estado.pedidos.find((item) => item.id === pedidoId);
     const filial = filialAtual();
@@ -1256,19 +1378,22 @@ function confirmarRecebimentoPedido(pedidoId) {
     notificar("Recebimento confirmado. Estoque da filial atualizado.");
 }
 
-function marcarAguardandoCompra(pedidoId) {
+function marcarAguardandoCompra(pedidoId, dataCompra) {
     const pedido = estado.pedidos.find((item) => item.id === pedidoId);
 
     if (!pedido || pedido.situacao !== "pendente") return;
 
-    const observacao = window.prompt("Informe uma observação para a filial (opcional):", "Aguardando compra para reposição da matriz.");
-
-    if (observacao === null) return;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dataCompra) || Number.isNaN(new Date(`${dataCompra}T12:00:00`).getTime())) {
+        elementos.mensagemEntrega.textContent = "Escolha uma data válida para a chegada na matriz.";
+        return;
+    }
 
     pedido.situacao = "aguardando_compra";
-    pedido.observacaoMatriz = observacao.trim() || "Aguardando compra para reposição da matriz.";
+    pedido.compraPrevista = dataCompra;
+    pedido.observacaoMatriz = `Aguardando compra. Chegada prevista na matriz: ${formatarDataSimples(dataCompra)}.`;
     pedido.analisadoEm = new Date().toISOString();
     salvarEstado();
+    fecharModal(elementos.modalEntrega);
     renderizarTudo();
     notificar("Pedido marcado como aguardando compra.");
 }
@@ -1418,7 +1543,10 @@ function lidarComAcao(acao, elemento) {
             abrirModalEntrega(elemento.dataset.pedidoId);
             break;
         case "aguardar-compra":
-            marcarAguardandoCompra(elemento.dataset.pedidoId);
+            abrirModalCompra(elemento.dataset.pedidoId);
+            break;
+        case "receber-compra":
+            abrirModalReceberCompra(elemento.dataset.pedidoId);
             break;
         case "confirmar-recebimento":
             confirmarRecebimentoPedido(elemento.dataset.pedidoId);
@@ -1648,7 +1776,19 @@ elementos.formularioEntrega.addEventListener("submit", (evento) => {
         return;
     }
 
-    aprovarPedido(elementos.entregaPedidoId.value, `${ano}-${mes}-${dia}`);
+    const dataSelecionada = `${ano}-${mes}-${dia}`;
+
+    if (elementos.entregaModo.value === "compra") {
+        marcarAguardandoCompra(elementos.entregaPedidoId.value, dataSelecionada);
+        return;
+    }
+
+    if (elementos.entregaModo.value === "receber_compra") {
+        receberCompraMatriz(elementos.entregaPedidoId.value, dataSelecionada);
+        return;
+    }
+
+    aprovarPedido(elementos.entregaPedidoId.value, dataSelecionada);
 });
 
 elementos.seletorPortal.addEventListener("change", () => {
