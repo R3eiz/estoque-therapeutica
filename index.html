@@ -18,24 +18,24 @@
             <nav class="menu-navegacao">
                 <div class="grupo-menu" id="menu-matriz">
                     <p class="rotulo-menu">Matriz</p>
-                    <button class="item-menu menu-ativo" data-pagina="dashboard">⌂ <span>Início</span></button>
-                    <button class="item-menu" data-pagina="produtos">□ <span>Produtos</span></button>
-                    <button class="item-menu" data-pagina="movimentacao" data-tipo-movimentacao="entrada">＋ <span>Entradas</span></button>
-                    <button class="item-menu" data-pagina="movimentacao" data-tipo-movimentacao="saida">− <span>Saídas</span></button>
-                    <button class="item-menu" data-pagina="estoque-baixo">! <span>Estoque baixo</span></button>
-                    <button class="item-menu" data-pagina="pedidos">▤ <span>Pedidos das filiais</span></button>
-                    <button class="item-menu" data-pagina="filiais">⌖ <span>Filiais</span></button>
-                    <button class="item-menu" data-pagina="historico">◷ <span>Histórico</span></button>
-                    <button class="item-menu" data-pagina="usuarios">♙ <span>Usuários</span></button>
-                    <button class="item-menu" data-pagina="configuracoes">⚙ <span>Configurações</span></button>
+                    <button class="item-menu menu-ativo" data-pagina="dashboard"><span class="icone icone-inicio" aria-hidden="true"></span><span>Início</span></button>
+                    <button class="item-menu" data-pagina="produtos"><span class="icone icone-produtos" aria-hidden="true"></span><span>Produtos</span></button>
+                    <button class="item-menu" data-pagina="movimentacao" data-tipo-movimentacao="entrada"><span class="icone icone-entrada" aria-hidden="true"></span><span>Entradas</span></button>
+                    <button class="item-menu" data-pagina="movimentacao" data-tipo-movimentacao="saida"><span class="icone icone-saida" aria-hidden="true"></span><span>Saídas</span></button>
+                    <button class="item-menu" data-pagina="estoque-baixo"><span class="icone icone-alerta" aria-hidden="true"></span><span>Estoque baixo</span></button>
+                    <button class="item-menu" data-pagina="pedidos"><span class="icone icone-pedidos" aria-hidden="true"></span><span>Pedidos das filiais</span></button>
+                    <button class="item-menu" data-pagina="filiais"><span class="icone icone-filiais" aria-hidden="true"></span><span>Filiais</span></button>
+                    <button class="item-menu" data-pagina="historico"><span class="icone icone-historico" aria-hidden="true"></span><span>Histórico</span></button>
+                    <button class="item-menu" data-pagina="usuarios"><span class="icone icone-usuarios" aria-hidden="true"></span><span>Usuários</span></button>
+                    <button class="item-menu" data-pagina="configuracoes"><span class="icone icone-config" aria-hidden="true"></span><span>Configurações</span></button>
                 </div>
 
                 <div class="grupo-menu" id="menu-filial" hidden>
                     <p class="rotulo-menu">Portal da filial</p>
-                    <button class="item-menu" data-pagina="portal-filial">⌂ <span>Início</span></button>
-                    <button class="item-menu" data-pagina="estoque-filial">□ <span>Meu estoque</span></button>
-                    <button class="item-menu" data-pagina="novo-pedido-filial">▤ <span>Novo pedido</span></button>
-                    <button class="item-menu" data-pagina="meus-pedidos">◷ <span>Meus pedidos</span></button>
+                    <button class="item-menu" data-pagina="portal-filial"><span class="icone icone-inicio" aria-hidden="true"></span><span>Início</span></button>
+                    <button class="item-menu" data-pagina="estoque-filial"><span class="icone icone-produtos" aria-hidden="true"></span><span>Meu estoque</span></button>
+                    <button class="item-menu" data-pagina="novo-pedido-filial"><span class="icone icone-pedidos" aria-hidden="true"></span><span>Novo pedido</span></button>
+                    <button class="item-menu" data-pagina="meus-pedidos"><span class="icone icone-historico" aria-hidden="true"></span><span>Meus pedidos</span></button>
                 </div>
             </nav>
 
@@ -61,7 +61,7 @@
                             <option value="sinop">Filial Sinop</option>
                         </select>
                     </label>
-                    <button class="notificacoes" type="button" id="botao-ir-alertas" title="Ver estoque baixo" aria-label="Ver alertas de estoque">♢</button>
+                    <button class="notificacoes" type="button" id="botao-ir-alertas" title="Ver estoque baixo" aria-label="Ver alertas de estoque"><span class="icone icone-alerta" aria-hidden="true"></span></button>
                 </div>
             </header>
 
@@ -73,8 +73,8 @@
                             <h2>Controle claro para a matriz e para as filiais.</h2>
                             <p class="texto-apresentacao">Cadastre produtos, registre movimentações e acompanhe solicitações em um só lugar.</p>
                             <div class="acoes-apresentacao">
-                                <button class="botao-principal" type="button" data-acao="novo-produto">＋ Cadastrar produto</button>
-                                <button class="botao-secundario-claro" type="button" data-acao="nova-entrada">Registrar entrada</button>
+                                <button class="botao-principal" type="button" data-acao="novo-produto"><span class="icone icone-plus" aria-hidden="true"></span>Cadastrar produto</button>
+                                <button class="botao-secundario-claro" type="button" data-acao="nova-entrada"><span class="icone icone-entrada" aria-hidden="true"></span>Registrar entrada</button>
                             </div>
                         </div>
                     </section>
@@ -127,7 +127,7 @@
                             <h2>Produtos</h2>
                             <p>Cadastre, consulte, edite e movimente os itens da matriz.</p>
                         </div>
-                        <button class="botao-principal" type="button" data-acao="novo-produto">＋ Cadastrar produto</button>
+                        <button class="botao-principal" type="button" data-acao="novo-produto"><span class="icone icone-plus" aria-hidden="true"></span>Cadastrar produto</button>
                     </div>
 
                     <section class="filtros" aria-label="Filtros de produtos">
@@ -257,8 +257,8 @@
                             <h2 id="titulo-portal-filial">Filial Therapeutica</h2>
                             <p class="texto-apresentacao">Consulte seu estoque individual e envie uma lista de itens para a análise da matriz.</p>
                             <div class="acoes-apresentacao">
-                                <button class="botao-principal" type="button" data-acao="abrir-novo-pedido-filial">＋ Criar pedido</button>
-                                <button class="botao-secundario-claro" type="button" data-acao="ver-estoque-filial">Ver meu estoque</button>
+                                <button class="botao-principal" type="button" data-acao="abrir-novo-pedido-filial"><span class="icone icone-plus" aria-hidden="true"></span>Criar pedido</button>
+                                <button class="botao-secundario-claro" type="button" data-acao="ver-estoque-filial"><span class="icone icone-produtos" aria-hidden="true"></span>Ver meu estoque</button>
                             </div>
                         </div>
                     </section>
