@@ -1,0 +1,43 @@
+# Estoque Therapeutica
+
+Protótipo de controle de estoque da matriz da Therapeutica, criado com HTML, CSS e JavaScript puro.
+
+## O que funciona nesta versão
+
+- Cadastro, edição e arquivamento de produtos;
+- Pesquisa e filtro por categoria;
+- Entrada e saída de produtos com bloqueio de estoque negativo;
+- Alertas automáticos de estoque baixo;
+- Histórico de movimentações com saldo antes e depois;
+- Portais de demonstração para Blumenau, Lucas e Sinop, além da visão da Matriz;
+- Estoque individual por filial;
+- Pedidos em lista: uma filial pode enviar vários produtos na mesma solicitação, com estoque atual obrigatório para cada item;
+- Aprovação, recusa ou espera de compra para pedidos;
+- Transferência aprovada baixa a matriz e atualiza a quantidade conhecida da filial;
+- Backup e restauração dos dados em arquivo JSON.
+
+## Como abrir
+
+Abra o arquivo `index.html` em um navegador. Para o desenvolvimento, a extensão Live Server do VS Code deixa a atualização mais prática.
+
+## Limite desta fase
+
+Os dados ficam no navegador atual usando `localStorage`. O seletor de “Visualização” serve apenas para demonstrar os portais: ele não é um login e não protege os dados. Portanto, ainda não existem sincronização entre computadores, permissões reais nem banco de dados remoto.
+
+Na próxima fase, o frontend será conectado ao Supabase para:
+
+- autenticação de matriz e filiais;
+- banco PostgreSQL;
+- políticas de segurança por usuário/filial;
+- dados compartilhados entre dispositivos;
+- publicação segura no GitHub Pages.
+
+## Estrutura do projeto
+
+```text
+estoque-therapeutica/
+├── index.html
+├── style.css
+├── script.js
+└── README.md
+```

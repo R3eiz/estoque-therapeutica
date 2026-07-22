@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#e87861">
+    <title>Estoque Therapeutica</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="sistema">
+        <aside class="menu-lateral" aria-label="Menu principal">
+            <div class="logo">
+                <span class="logo-icone" aria-hidden="true">T</span>
+                <span>Therapeutica</span>
+            </div>
+
+            <nav class="menu-navegacao">
+                <div class="grupo-menu" id="menu-matriz">
+                    <p class="rotulo-menu">Matriz</p>
+                    <button class="item-menu menu-ativo" data-pagina="dashboard">⌂ <span>Início</span></button>
+                    <button class="item-menu" data-pagina="produtos">□ <span>Produtos</span></button>
+                    <button class="item-menu" data-pagina="movimentacao" data-tipo-movimentacao="entrada">＋ <span>Entradas</span></button>
+                    <button class="item-menu" data-pagina="movimentacao" data-tipo-movimentacao="saida">− <span>Saídas</span></button>
+                    <button class="item-menu" data-pagina="estoque-baixo">! <span>Estoque baixo</span></button>
+                    <button class="item-menu" data-pagina="pedidos">▤ <span>Pedidos das filiais</span></button>
+                    <button class="item-menu" data-pagina="filiais">⌖ <span>Filiais</span></button>
+                    <button class="item-menu" data-pagina="historico">◷ <span>Histórico</span></button>
+                    <button class="item-menu" data-pagina="usuarios">♙ <span>Usuários</span></button>
+                    <button class="item-menu" data-pagina="configuracoes">⚙ <span>Configurações</span></button>
+                </div>
+
+                <div class="grupo-menu" id="menu-filial" hidden>
+                    <p class="rotulo-menu">Portal da filial</p>
+                    <button class="item-menu" data-pagina="portal-filial">⌂ <span>Início</span></button>
+                    <button class="item-menu" data-pagina="estoque-filial">□ <span>Meu estoque</span></button>
+                    <button class="item-menu" data-pagina="novo-pedido-filial">▤ <span>Novo pedido</span></button>
+                    <button class="item-menu" data-pagina="meus-pedidos">◷ <span>Meus pedidos</span></button>
+                </div>
+            </nav>
+
+            <div class="rodape-menu">
+                <span class="ponto-status"></span>
+                <span>Protótipo local</span>
+            </div>
+        </aside>
+
+        <div class="conteudo">
+            <header class="cabecalho">
+                <div>
+                    <p>Therapeutica Pharmacia · Matriz</p>
+                    <h1 id="titulo-pagina">Dashboard</h1>
+                </div>
+                <div class="acoes-cabecalho">
+                    <label class="seletor-portal" for="seletor-portal">
+                        <span>Visualização</span>
+                        <select id="seletor-portal">
+                            <option value="matriz">Matriz</option>
+                            <option value="blumenau">Filial Blumenau</option>
+                            <option value="lucas">Filial Lucas</option>
+                            <option value="sinop">Filial Sinop</option>
+                        </select>
+                    </label>
+                    <button class="notificacoes" type="button" id="botao-ir-alertas" title="Ver estoque baixo" aria-label="Ver alertas de estoque">♢</button>
+                </div>
+            </header>
+
+            <main>
+                <section class="pagina pagina-ativa" id="pagina-dashboard">
+                    <section class="apresentacao">
+                        <div>
+                            <p class="destaque">Estoque central</p>
+                            <h2>Controle claro para a matriz e para as filiais.</h2>
+                            <p class="texto-apresentacao">Cadastre produtos, registre movimentações e acompanhe solicitações em um só lugar.</p>
+                            <div class="acoes-apresentacao">
+                                <button class="botao-principal" type="button" data-acao="novo-produto">＋ Cadastrar produto</button>
+                                <button class="botao-secundario-claro" type="button" data-acao="nova-entrada">Registrar entrada</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="indicadores" aria-label="Indicadores do estoque">
+                        <article class="cartao">
+                            <p>Produtos cadastrados</p>
+                            <strong id="indicador-produtos">0</strong>
+                            <span>itens ativos</span>
+                        </article>
+                        <article class="cartao">
+                            <p>Quantidade total</p>
+                            <strong id="indicador-unidades">0</strong>
+                            <span>unidades na matriz</span>
+                        </article>
+                        <article class="cartao cartao-alerta">
+                            <p>Estoque baixo</p>
+                            <strong id="indicador-estoque-baixo">0</strong>
+                            <span>produtos para revisar</span>
+                        </article>
+                        <article class="cartao">
+                            <p>Pedidos pendentes</p>
+                            <strong id="indicador-pedidos">0</strong>
+                            <span>solicitações abertas</span>
+                        </article>
+                    </section>
+
+                    <section class="painel-duplo">
+                        <article class="quadro">
+                            <div class="titulo-quadro">
+                                <h2>Últimas movimentações</h2>
+                                <button class="botao-link" type="button" data-acao="ver-historico">Ver histórico</button>
+                            </div>
+                            <div id="dashboard-movimentacoes" class="lista-resumo"></div>
+                        </article>
+                        <article class="quadro">
+                            <div class="titulo-quadro">
+                                <h2>Alertas de estoque</h2>
+                                <button class="botao-link" type="button" data-acao="ver-alertas">Ver todos</button>
+                            </div>
+                            <div id="dashboard-alertas" class="lista-resumo"></div>
+                        </article>
+                    </section>
+                </section>
+
+                <section class="pagina" id="pagina-produtos">
+                    <div class="cabecalho-secao">
+                        <div>
+                            <p class="subtitulo-secao">Estoque central da matriz</p>
+                            <h2>Produtos</h2>
+                            <p>Cadastre, consulte, edite e movimente os itens da matriz.</p>
+                        </div>
+                        <button class="botao-principal" type="button" data-acao="novo-produto">＋ Cadastrar produto</button>
+                    </div>
+
+                    <section class="filtros" aria-label="Filtros de produtos">
+                        <label>
+                            <span>Buscar produto</span>
+                            <input type="search" id="busca-produtos" placeholder="Nome ou categoria">
+                        </label>
+                        <label>
+                            <span>Categoria</span>
+                            <select id="filtro-categoria">
+                                <option value="">Todas as categorias</option>
+                            </select>
+                        </label>
+                    </section>
+
+                    <section class="tabela-container">
+                        <div class="tabela-responsiva">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Produto</th>
+                                        <th>Categoria</th>
+                                        <th>Quantidade</th>
+                                        <th>Mínimo</th>
+                                        <th>Unidade</th>
+                                        <th>Situação</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-produtos"></tbody>
+                            </table>
+                        </div>
+                    </section>
+                </section>
+
+                <section class="pagina" id="pagina-movimentacao">
+                    <div class="cabecalho-secao">
+                        <div>
+                            <p class="subtitulo-secao" id="movimentacao-subtitulo">Movimentação de estoque</p>
+                            <h2 id="movimentacao-titulo">Registrar entrada</h2>
+                            <p id="movimentacao-descricao">Registre produtos que chegaram à matriz.</p>
+                        </div>
+                    </div>
+
+                    <section class="formulario-pagina-container">
+                        <form id="formulario-movimentacao" class="formulario-pagina">
+                            <label for="movimento-produto">Produto</label>
+                            <select id="movimento-produto" required></select>
+
+                            <div class="info-produto" id="info-produto-movimento">
+                                Selecione um produto para ver o estoque atual.
+                            </div>
+
+                            <label for="movimento-quantidade">Quantidade</label>
+                            <input id="movimento-quantidade" type="number" min="1" step="1" placeholder="Exemplo: 10" required>
+
+                            <label for="movimento-observacao">Observação</label>
+                            <textarea id="movimento-observacao" rows="4" placeholder="Exemplo: Nota fiscal, motivo da saída ou responsável"></textarea>
+
+                            <p class="mensagem-formulario" id="mensagem-movimentacao" aria-live="polite"></p>
+
+                            <div class="acoes-formulario">
+                                <button class="botao-principal" type="submit" id="botao-confirmar-movimento">Confirmar entrada</button>
+                            </div>
+                        </form>
+                    </section>
+                </section>
+
+                <section class="pagina" id="pagina-estoque-baixo">
+                    <div class="cabecalho-secao">
+                        <div>
+                            <p class="subtitulo-secao">Atenção necessária</p>
+                            <h2>Estoque baixo</h2>
+                            <p>Itens cuja quantidade atual está igual ou abaixo do mínimo definido.</p>
+                        </div>
+                    </div>
+                    <section class="tabela-container">
+                        <div class="tabela-responsiva">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Produto</th>
+                                        <th>Categoria</th>
+                                        <th>Atual</th>
+                                        <th>Mínimo</th>
+                                        <th>Unidade</th>
+                                        <th>Ação rápida</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-estoque-baixo"></tbody>
+                            </table>
+                        </div>
+                    </section>
+                </section>
+
+                <section class="pagina" id="pagina-pedidos">
+                    <div class="cabecalho-secao">
+                        <div>
+                            <p class="subtitulo-secao">Solicitações das filiais</p>
+                            <h2>Pedidos</h2>
+                            <p>A filial informa seu estoque atual antes de solicitar itens à matriz.</p>
+                        </div>
+                        <p class="aviso-fluxo">Pedidos são criados pelos portais das filiais e podem conter vários itens.</p>
+                    </div>
+                    <section class="tabela-container">
+                        <div class="tabela-responsiva">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Filial</th>
+                                        <th>Lista solicitada</th>
+                                        <th>Situação</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-pedidos"></tbody>
+                            </table>
+                        </div>
+                    </section>
+                </section>
+
+                <section class="pagina" id="pagina-portal-filial">
+                    <section class="apresentacao apresentacao-filial">
+                        <div>
+                            <p class="destaque">Portal da filial</p>
+                            <h2 id="titulo-portal-filial">Filial Therapeutica</h2>
+                            <p class="texto-apresentacao">Consulte seu estoque individual e envie uma lista de itens para a análise da matriz.</p>
+                            <div class="acoes-apresentacao">
+                                <button class="botao-principal" type="button" data-acao="abrir-novo-pedido-filial">＋ Criar pedido</button>
+                                <button class="botao-secundario-claro" type="button" data-acao="ver-estoque-filial">Ver meu estoque</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="indicadores" aria-label="Indicadores da filial">
+                        <article class="cartao">
+                            <p>Itens informados</p>
+                            <strong id="indicador-filial-itens">0</strong>
+                            <span>no estoque da filial</span>
+                        </article>
+                        <article class="cartao">
+                            <p>Quantidade conhecida</p>
+                            <strong id="indicador-filial-quantidade">0</strong>
+                            <span>unidades registradas</span>
+                        </article>
+                        <article class="cartao cartao-alerta">
+                            <p>Pedidos em aberto</p>
+                            <strong id="indicador-filial-pedidos">0</strong>
+                            <span>aguardando matriz</span>
+                        </article>
+                    </section>
+                </section>
+
+                <section class="pagina" id="pagina-estoque-filial">
+                    <div class="cabecalho-secao">
+                        <div>
+                            <p class="subtitulo-secao">Estoque individual</p>
+                            <h2 id="titulo-estoque-filial">Meu estoque</h2>
+                            <p>Atualizado quando a filial informa o saldo no pedido e quando a matriz aprova uma transferência.</p>
+                        </div>
+                    </div>
+                    <section class="tabela-container">
+                        <div class="tabela-responsiva">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Produto</th>
+                                        <th>Categoria</th>
+                                        <th>Quantidade conhecida</th>
+                                        <th>Unidade</th>
+                                        <th>Última atualização</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-estoque-filial"></tbody>
+                            </table>
+                        </div>
+                    </section>
+                </section>
+
+                <section class="pagina" id="pagina-novo-pedido-filial">
+                    <div class="cabecalho-secao">
+                        <div>
+                            <p class="subtitulo-secao">Solicitação para a matriz</p>
+                            <h2>Novo pedido</h2>
+                            <p>Monte uma lista. Para cada produto, informe obrigatoriamente o estoque atual da filial.</p>
+                        </div>
+                    </div>
+
+                    <section class="pedido-lista-layout">
+                        <form id="formulario-item-pedido" class="formulario-pagina-container formulario-item-pedido">
+                            <h3>Adicionar item</h3>
+                            <label for="item-pedido-produto">Produto</label>
+                            <select id="item-pedido-produto" required></select>
+
+                            <div class="campos-lado-a-lado">
+                                <div>
+                                    <label for="item-pedido-estoque">Estoque atual na filial</label>
+                                    <input type="number" id="item-pedido-estoque" min="0" step="1" placeholder="0" required>
+                                </div>
+                                <div>
+                                    <label for="item-pedido-quantidade">Quantidade solicitada</label>
+                                    <input type="number" id="item-pedido-quantidade" min="1" step="1" placeholder="0" required>
+                                </div>
+                            </div>
+
+                            <label for="item-pedido-observacao">Observação do item</label>
+                            <input type="text" id="item-pedido-observacao" maxlength="160" placeholder="Exemplo: uso previsto para a semana">
+                            <p class="mensagem-formulario" id="mensagem-item-pedido" aria-live="polite"></p>
+                            <button class="botao-secundario" type="submit">Adicionar à lista</button>
+                        </form>
+
+                        <section class="carrinho-pedido">
+                            <div class="titulo-quadro">
+                                <h3>Lista do pedido</h3>
+                                <span id="quantidade-itens-carrinho">0 itens</span>
+                            </div>
+                            <div id="itens-carrinho-pedido" class="lista-carrinho"></div>
+                            <label for="observacao-pedido-completo">Observação geral (opcional)</label>
+                            <textarea id="observacao-pedido-completo" rows="3" placeholder="Exemplo: Pedido para reposição da próxima semana"></textarea>
+                            <p class="mensagem-formulario" id="mensagem-pedido-filial" aria-live="polite"></p>
+                            <div class="acoes-formulario">
+                                <button type="button" class="botao-secundario" id="botao-limpar-carrinho">Limpar lista</button>
+                                <button type="button" class="botao-principal" id="botao-enviar-pedido-lista">Enviar pedido à matriz</button>
+                            </div>
+                        </section>
+                    </section>
+                </section>
+
+                <section class="pagina" id="pagina-meus-pedidos">
+                    <div class="cabecalho-secao">
+                        <div>
+                            <p class="subtitulo-secao">Acompanhamento da filial</p>
+                            <h2>Meus pedidos</h2>
+                            <p>Veja as listas enviadas e a resposta da matriz.</p>
+                        </div>
+                    </div>
+                    <div id="lista-meus-pedidos" class="lista-pedidos-filial"></div>
+                </section>
+
+                <section class="pagina" id="pagina-filiais">
+                    <div class="cabecalho-secao">
+                        <div>
+                            <p class="subtitulo-secao">Rede Therapeutica</p>
+                            <h2>Filiais</h2>
+                            <p>Visão inicial das filiais que farão pedidos à matriz.</p>
+                        </div>
+                    </div>
+                    <div class="grade-filiais" id="lista-filiais"></div>
+                </section>
+
+                <section class="pagina" id="pagina-historico">
+                    <div class="cabecalho-secao">
+                        <div>
+                            <p class="subtitulo-secao">Rastreabilidade</p>
+                            <h2>Histórico</h2>
+                            <p>Registro de todas as entradas, saídas e transferências aprovadas.</p>
+                        </div>
+                    </div>
+                    <section class="filtros" aria-label="Filtros do histórico">
+                        <label>
+                            <span>Buscar</span>
+                            <input type="search" id="busca-historico" placeholder="Produto ou observação">
+                        </label>
+                        <label>
+                            <span>Tipo</span>
+                            <select id="filtro-historico">
+                                <option value="">Todos os tipos</option>
+                                <option value="entrada">Entradas</option>
+                                <option value="saida">Saídas</option>
+                                <option value="transferencia">Transferências</option>
+                            </select>
+                        </label>
+                    </section>
+                    <section class="tabela-container">
+                        <div class="tabela-responsiva">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Tipo</th>
+                                        <th>Produto</th>
+                                        <th>Quantidade</th>
+                                        <th>Destino / observação</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-historico"></tbody>
+                            </table>
+                        </div>
+                    </section>
+                </section>
+
+                <section class="pagina" id="pagina-usuarios">
+                    <div class="cabecalho-secao">
+                        <div>
+                            <p class="subtitulo-secao">Acesso ao sistema</p>
+                            <h2>Usuários</h2>
+                            <p>Estrutura preparada para a futura autenticação segura.</p>
+                        </div>
+                    </div>
+                    <section class="cartao-informativo">
+                        <h3>Administrador da matriz</h3>
+                        <p>Este protótipo ainda não possui login real. Na próxima fase, o Supabase controlará autenticação e permissões de Matriz, Blumenau, Lucas e Sinop.</p>
+                        <div class="papeis-usuario">
+                            <span>Administrador</span><span>Filial</span><span>Consulta</span>
+                        </div>
+                    </section>
+                </section>
+
+                <section class="pagina" id="pagina-configuracoes">
+                    <div class="cabecalho-secao">
+                        <div>
+                            <p class="subtitulo-secao">Dados do protótipo</p>
+                            <h2>Configurações</h2>
+                            <p>Faça uma cópia dos dados ou importe um backup local.</p>
+                        </div>
+                    </div>
+                    <section class="grade-configuracoes">
+                        <article class="cartao-configuracao">
+                            <h3>Exportar backup</h3>
+                            <p>Baixe produtos, pedidos e histórico em um arquivo JSON.</p>
+                            <button type="button" class="botao-principal" id="botao-exportar">Baixar backup</button>
+                        </article>
+                        <article class="cartao-configuracao">
+                            <h3>Importar backup</h3>
+                            <p>Restaure dados previamente exportados neste mesmo sistema.</p>
+                            <label class="botao-secundario" for="arquivo-importar">Escolher arquivo</label>
+                            <input type="file" id="arquivo-importar" accept="application/json" hidden>
+                        </article>
+                        <article class="cartao-configuracao cartao-perigo">
+                            <h3>Limpar dados locais</h3>
+                            <p>Apaga somente os dados deste protótipo no navegador atual.</p>
+                            <button type="button" class="botao-perigo" id="botao-limpar-dados">Limpar dados</button>
+                        </article>
+                    </section>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-produto" aria-hidden="true">
+        <div class="modal-conteudo" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-produto">
+            <div class="modal-cabecalho">
+                <div>
+                    <p class="subtitulo-modal">Catálogo da matriz</p>
+                    <h2 id="titulo-modal-produto">Cadastrar produto</h2>
+                </div>
+                <button class="botao-fechar" type="button" data-fechar-modal="modal-produto" aria-label="Fechar">×</button>
+            </div>
+            <form id="formulario-produto" class="formulario-modal">
+                <input type="hidden" id="produto-id">
+                <label for="produto-codigo">Código interno (opcional)</label>
+                <input type="text" id="produto-codigo" maxlength="30" placeholder="Exemplo: ALM-001">
+
+                <label for="produto-nome">Nome do produto</label>
+                <input type="text" id="produto-nome" maxlength="100" placeholder="Exemplo: Fita adesiva" required>
+
+                <label for="produto-categoria">Categoria</label>
+                <select id="produto-categoria" required>
+                    <option value="">Selecione uma categoria</option>
+                    <option value="Escritório">Escritório</option>
+                    <option value="Limpeza">Limpeza</option>
+                    <option value="Alimentação">Alimentação</option>
+                    <option value="Embalagem">Embalagem</option>
+                    <option value="Manutenção">Manutenção</option>
+                    <option value="Outros">Outros</option>
+                </select>
+
+                <div class="campos-lado-a-lado">
+                    <div>
+                        <label for="produto-quantidade">Quantidade inicial</label>
+                        <input type="number" id="produto-quantidade" min="0" step="1" placeholder="0" required>
+                        <small id="ajuda-quantidade-produto">Depois use entradas e saídas para alterar o estoque.</small>
+                    </div>
+                    <div>
+                        <label for="produto-minimo">Estoque mínimo</label>
+                        <input type="number" id="produto-minimo" min="0" step="1" placeholder="0" required>
+                    </div>
+                </div>
+
+                <label for="produto-unidade">Unidade de medida</label>
+                <select id="produto-unidade" required>
+                    <option value="">Selecione uma unidade</option>
+                    <option value="Unidade">Unidade</option>
+                    <option value="Caixa">Caixa</option>
+                    <option value="Pacote">Pacote</option>
+                    <option value="Litro">Litro</option>
+                    <option value="Quilograma">Quilograma</option>
+                </select>
+
+                <p class="mensagem-formulario" id="mensagem-produto" aria-live="polite"></p>
+                <div class="acoes-formulario">
+                    <button type="button" class="botao-secundario" data-fechar-modal="modal-produto">Cancelar</button>
+                    <button type="submit" class="botao-principal">Salvar produto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-pedido" aria-hidden="true">
+        <div class="modal-conteudo" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-pedido">
+            <div class="modal-cabecalho">
+                <div>
+                    <p class="subtitulo-modal">Solicitação à matriz</p>
+                    <h2 id="titulo-modal-pedido">Criar pedido</h2>
+                </div>
+                <button class="botao-fechar" type="button" data-fechar-modal="modal-pedido" aria-label="Fechar">×</button>
+            </div>
+            <form id="formulario-pedido" class="formulario-modal">
+                <label for="pedido-filial">Filial</label>
+                <select id="pedido-filial" required></select>
+
+                <label for="pedido-produto">Produto solicitado</label>
+                <select id="pedido-produto" required></select>
+
+                <div class="campos-lado-a-lado">
+                    <div>
+                        <label for="pedido-estoque-atual">Estoque atual na filial</label>
+                        <input type="number" id="pedido-estoque-atual" min="0" step="1" placeholder="0" required>
+                    </div>
+                    <div>
+                        <label for="pedido-quantidade">Quantidade solicitada</label>
+                        <input type="number" id="pedido-quantidade" min="1" step="1" placeholder="0" required>
+                    </div>
+                </div>
+
+                <label for="pedido-observacao">Observação</label>
+                <textarea id="pedido-observacao" rows="3" placeholder="Exemplo: Material necessário para a semana"></textarea>
+
+                <p class="mensagem-formulario" id="mensagem-pedido" aria-live="polite"></p>
+                <div class="acoes-formulario">
+                    <button type="button" class="botao-secundario" data-fechar-modal="modal-pedido">Cancelar</button>
+                    <button type="submit" class="botao-principal">Enviar pedido</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
