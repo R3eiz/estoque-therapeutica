@@ -571,6 +571,43 @@
         </div>
     </div>
 
+    <div class="modal" id="modal-entrega" aria-hidden="true">
+        <div class="modal-conteudo modal-entrega-conteudo" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-entrega">
+            <div class="modal-cabecalho">
+                <div>
+                    <p class="subtitulo-modal">Aprovação da matriz</p>
+                    <h2 id="titulo-modal-entrega">Data prevista de entrega</h2>
+                </div>
+                <button class="botao-fechar" type="button" data-fechar-modal="modal-entrega" aria-label="Fechar">×</button>
+            </div>
+            <form id="formulario-entrega" class="formulario-modal">
+                <input type="hidden" id="entrega-pedido-id">
+                <p class="texto-apoio" id="entrega-resumo">Selecione quando a filial deve receber este pedido.</p>
+
+                <div class="data-entrega-grid">
+                    <label for="entrega-dia">
+                        <span>Dia</span>
+                        <select id="entrega-dia" required></select>
+                    </label>
+                    <label for="entrega-mes">
+                        <span>Mês</span>
+                        <select id="entrega-mes" required></select>
+                    </label>
+                    <label for="entrega-ano">
+                        <span>Ano</span>
+                        <select id="entrega-ano" required></select>
+                    </label>
+                </div>
+
+                <p class="mensagem-formulario" id="mensagem-entrega" aria-live="polite"></p>
+                <div class="acoes-formulario">
+                    <button type="button" class="botao-secundario" data-fechar-modal="modal-entrega">Cancelar</button>
+                    <button type="submit" class="botao-principal">Aprovar envio</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <script src="script.js"></script>

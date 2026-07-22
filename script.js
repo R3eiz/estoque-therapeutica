@@ -77,6 +77,14 @@ const elementos = {
     pedidoEstoqueAtual: document.querySelector("#pedido-estoque-atual"),
     pedidoQuantidade: document.querySelector("#pedido-quantidade"),
     pedidoObservacao: document.querySelector("#pedido-observacao"),
+    modalEntrega: document.querySelector("#modal-entrega"),
+    formularioEntrega: document.querySelector("#formulario-entrega"),
+    entregaPedidoId: document.querySelector("#entrega-pedido-id"),
+    entregaResumo: document.querySelector("#entrega-resumo"),
+    entregaDia: document.querySelector("#entrega-dia"),
+    entregaMes: document.querySelector("#entrega-mes"),
+    entregaAno: document.querySelector("#entrega-ano"),
+    mensagemEntrega: document.querySelector("#mensagem-entrega"),
     botaoIrAlertas: document.querySelector("#botao-ir-alertas"),
     botaoExportar: document.querySelector("#botao-exportar"),
     arquivoImportar: document.querySelector("#arquivo-importar"),
@@ -1083,6 +1091,56 @@ function abrirModalPedido(filialId = "") {
     setTimeout(() => elementos.pedidoEstoqueAtual.focus(), 0);
 }
 
+function preencherSeletoresEntrega(dataBase = new Date()) {
+    const meses = [
+        "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+        "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+    ];
+    const anoAtual = dataBase.getFullYear();
+    const diaAtual = dataBase.getDate();
+    const mesAtual = dataBase.getMonth() + 1;
+
+    elementos.entregaDia.innerHTML = Array.from({ length: 31 }, (_, indice) => {
+        const dia = indice + 1;
+        return `<option value="${dia}">${String(dia).padStart(2, "0")}</option>`;
+    }).join("");
+    elementos.entregaMes.innerHTML = meses.map((mes, indice) => `<option value="${indice + 1}">${mes}</option>`).join("");
+    elementos.entregaAno.innerHTML = Array.from({ length: 4 }, (_, indice) => {
+        const ano = anoAtual + indice;
+        return `<option value="${ano}">${ano}</option>`;
+    }).join("");
+
+    elementos.entregaDia.value = String(diaAtual);
+    elementos.entregaMes.value = String(mesAtual);
+    elementos.entregaAno.value = String(anoAtual);
+}
+
+function abrirModalEntrega(pedidoId) {
+    const pedido = estado.pedidos.find((item) => item.id === pedidoId);
+
+    if (!pedido || !["pendente", "aguardando_compra"].includes(pedido.situacao)) return;
+
+    const itens = itensDoPedido(pedido);
+    const itensIndisponiveis = itens.filter((item) => {
+        const produto = buscarProduto(item.produtoId);
+        return !produto || !produto.ativo || produto.quantidade < item.quantidadeSolicitada;
+    });
+
+    if (itensIndisponiveis.length) {
+        notificar("A matriz não possui saldo suficiente para todos os itens. Registre uma entrada ou marque o pedido como aguardando compra.", "erro");
+        return;
+    }
+
+    const filial = buscarFilial(pedido.filialId);
+    elementos.formularioEntrega.reset();
+    elementos.entregaPedidoId.value = pedido.id;
+    elementos.entregaResumo.textContent = `Pedido para ${filial?.nome || "a filial"} com ${itens.length} item(ns). Escolha a previsão de entrega.`;
+    elementos.mensagemEntrega.textContent = "";
+    preencherSeletoresEntrega(new Date());
+    abrirModal(elementos.modalEntrega);
+    setTimeout(() => elementos.entregaDia.focus(), 0);
+}
+
 function arquivarProduto(produtoId) {
     const produto = buscarProduto(produtoId);
 
@@ -1107,7 +1165,7 @@ function arquivarProduto(produtoId) {
     notificar("Produto arquivado. O histórico foi preservado.");
 }
 
-function aprovarPedido(pedidoId) {
+function aprovarPedido(pedidoId, dataEntrega) {
     const pedido = estado.pedidos.find((item) => item.id === pedidoId);
 
     if (!pedido || !["pendente", "aguardando_compra"].includes(pedido.situacao)) return;
@@ -1124,14 +1182,8 @@ function aprovarPedido(pedidoId) {
     }
 
     const filial = buscarFilial(pedido.filialId);
-    const entregaPrevista = window.prompt(`Informe a data prevista de entrega para ${filial?.nome || "a filial"} (AAAA-MM-DD):`, new Date().toISOString().slice(0, 10));
-
-    if (entregaPrevista === null) return;
-
-    const dataEntrega = entregaPrevista.trim();
-
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dataEntrega) || Number.isNaN(new Date(`${dataEntrega}T12:00:00`).getTime())) {
-        notificar("Informe a data de entrega no formato AAAA-MM-DD.", "erro");
+        elementos.mensagemEntrega.textContent = "Escolha uma data de entrega válida.";
         return;
     }
 
@@ -1165,6 +1217,7 @@ function aprovarPedido(pedidoId) {
     });
 
     salvarEstado();
+    fecharModal(elementos.modalEntrega);
     renderizarTudo();
     notificar("Pedido aprovado. Estoque da matriz baixado e entrega informada à filial.");
 }
@@ -1362,7 +1415,7 @@ function lidarComAcao(acao, elemento) {
             renderizarCarrinhoPedido();
             break;
         case "aprovar-pedido":
-            aprovarPedido(elemento.dataset.pedidoId);
+            abrirModalEntrega(elemento.dataset.pedidoId);
             break;
         case "aguardar-compra":
             marcarAguardandoCompra(elemento.dataset.pedidoId);
@@ -1399,7 +1452,7 @@ document.addEventListener("click", (evento) => {
     }
 });
 
-[elementos.modalProduto, elementos.modalPedido].forEach((modal) => {
+[elementos.modalProduto, elementos.modalPedido, elementos.modalEntrega].forEach((modal) => {
     modal.addEventListener("click", (evento) => {
         if (evento.target === modal) fecharModal(modal);
     });
@@ -1409,6 +1462,7 @@ document.addEventListener("keydown", (evento) => {
     if (evento.key === "Escape") {
         fecharModal(elementos.modalProduto);
         fecharModal(elementos.modalPedido);
+        fecharModal(elementos.modalEntrega);
     }
 });
 
@@ -1578,6 +1632,23 @@ elementos.formularioPedido.addEventListener("submit", (evento) => {
     fecharModal(elementos.modalPedido);
     renderizarTudo();
     notificar("Pedido enviado para análise da matriz.");
+});
+
+elementos.formularioEntrega.addEventListener("submit", (evento) => {
+    evento.preventDefault();
+    const dia = String(elementos.entregaDia.value).padStart(2, "0");
+    const mes = String(elementos.entregaMes.value).padStart(2, "0");
+    const ano = elementos.entregaAno.value;
+    const ultimoDia = new Date(Number(ano), Number(mes), 0).getDate();
+
+    elementos.mensagemEntrega.textContent = "";
+
+    if (Number(dia) > ultimoDia) {
+        elementos.mensagemEntrega.textContent = "Este mês não possui esse dia. Escolha outra data.";
+        return;
+    }
+
+    aprovarPedido(elementos.entregaPedidoId.value, `${ano}-${mes}-${dia}`);
 });
 
 elementos.seletorPortal.addEventListener("change", () => {

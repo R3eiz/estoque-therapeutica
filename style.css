@@ -744,6 +744,12 @@ tbody tr:last-child td {
     gap: 12px;
 }
 
+.texto-apoio {
+    margin: 0;
+    color: var(--marrom-claro);
+    line-height: 1.5;
+}
+
 .info-produto,
 .produto-selecionado {
     padding: 13px;
@@ -980,6 +986,10 @@ tbody tr:last-child td {
     box-shadow: 0 24px 70px rgba(57, 37, 32, 0.35);
 }
 
+.modal-entrega-conteudo {
+    width: min(100%, 520px);
+}
+
 .modal-cabecalho {
     display: flex;
     align-items: flex-start;
@@ -1015,6 +1025,29 @@ tbody tr:last-child td {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 14px;
+}
+
+.data-entrega-grid {
+    display: grid;
+    grid-template-columns: 0.75fr 1.35fr 0.9fr;
+    gap: 12px;
+    padding: 14px;
+    background: var(--fundo);
+    border: 1px solid var(--borda);
+    border-radius: 14px;
+}
+
+.data-entrega-grid label {
+    gap: 8px;
+}
+
+.data-entrega-grid select {
+    min-height: 48px;
+    padding: 10px 12px;
+    background-color: var(--branco);
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 800;
 }
 
 small {
@@ -1083,7 +1116,8 @@ small {
     .apresentacao h2 { font-size: 35px; letter-spacing: -1.4px; }
     .indicadores { grid-template-columns: 1fr; }
     .filtros,
-    .campos-lado-a-lado { grid-template-columns: 1fr; }
+    .campos-lado-a-lado,
+    .data-entrega-grid { grid-template-columns: 1fr; }
     .modal-conteudo { padding: 21px; }
     .acoes-formulario { flex-direction: column-reverse; }
     .acoes-formulario .botao-principal,
