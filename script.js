@@ -80,6 +80,7 @@ const elementos = {
     botaoIrAlertas: document.querySelector("#botao-ir-alertas"),
     botaoExportar: document.querySelector("#botao-exportar"),
     arquivoImportar: document.querySelector("#arquivo-importar"),
+    botaoDadosDemo: document.querySelector("#botao-dados-demo"),
     botaoLimparDados: document.querySelector("#botao-limpar-dados"),
     tituloPortalFilial: document.querySelector("#titulo-portal-filial"),
     tituloEstoqueFilial: document.querySelector("#titulo-estoque-filial"),
@@ -141,6 +142,190 @@ function estadoPadrao() {
         filiais: FILIAIS_PADRAO.map((filial) => ({ ...filial })),
         estoqueFiliais: {},
         atualizadoEm: new Date().toISOString()
+    };
+}
+
+function criarEstadoDemo() {
+    const agora = new Date().toISOString();
+    const produtos = [
+        ["prod-001", "MED-001", "Dipirona 500mg", "Medicamentos", 186, 40, "Caixa"],
+        ["prod-002", "MED-002", "Paracetamol 750mg", "Medicamentos", 142, 35, "Caixa"],
+        ["prod-003", "MED-003", "Ibuprofeno 600mg", "Medicamentos", 78, 25, "Caixa"],
+        ["prod-004", "MED-004", "Loratadina 10mg", "Medicamentos", 34, 30, "Caixa"],
+        ["prod-005", "MED-005", "Omeprazol 20mg", "Medicamentos", 18, 28, "Caixa"],
+        ["prod-006", "DER-001", "Protetor solar FPS 50", "Dermocosméticos", 64, 18, "Unidade"],
+        ["prod-007", "DER-002", "Hidratante corporal 200ml", "Dermocosméticos", 51, 20, "Unidade"],
+        ["prod-008", "DER-003", "Sabonete facial", "Dermocosméticos", 22, 16, "Unidade"],
+        ["prod-009", "DER-004", "Shampoo terapêutico", "Dermocosméticos", 39, 14, "Unidade"],
+        ["prod-010", "DER-005", "Pomada reparadora", "Dermocosméticos", 12, 18, "Unidade"],
+        ["prod-011", "INS-001", "Álcool 70% 1L", "Insumos", 96, 30, "Frasco"],
+        ["prod-012", "INS-002", "Luvas descartáveis P", "Insumos", 48, 20, "Caixa"],
+        ["prod-013", "INS-003", "Luvas descartáveis M", "Insumos", 62, 20, "Caixa"],
+        ["prod-014", "INS-004", "Máscara cirúrgica", "Insumos", 27, 25, "Caixa"],
+        ["prod-015", "INS-005", "Seringa 5ml", "Insumos", 320, 80, "Unidade"],
+        ["prod-016", "EMB-001", "Sacola P Therapeutica", "Embalagens", 740, 160, "Unidade"],
+        ["prod-017", "EMB-002", "Sacola M Therapeutica", "Embalagens", 420, 120, "Unidade"],
+        ["prod-018", "EMB-003", "Etiqueta térmica", "Embalagens", 980, 260, "Unidade"],
+        ["prod-019", "EMB-004", "Envelope delivery", "Embalagens", 115, 100, "Unidade"],
+        ["prod-020", "HIG-001", "Lenço umedecido", "Higiene", 44, 22, "Pacote"],
+        ["prod-021", "HIG-002", "Algodão 100g", "Higiene", 59, 24, "Pacote"],
+        ["prod-022", "HIG-003", "Hastes flexíveis", "Higiene", 31, 18, "Caixa"],
+        ["prod-023", "SUP-001", "Papel A4", "Administrativo", 21, 12, "Resma"],
+        ["prod-024", "SUP-002", "Bobina térmica", "Administrativo", 36, 18, "Unidade"],
+        ["prod-025", "SUP-003", "Caneta azul", "Administrativo", 108, 30, "Unidade"],
+        ["prod-026", "MED-006", "Soro fisiológico 500ml", "Medicamentos", 8, 20, "Frasco"],
+        ["prod-027", "MED-007", "Vitamina C 1g", "Medicamentos", 54, 20, "Caixa"],
+        ["prod-028", "DER-006", "Água micelar 200ml", "Dermocosméticos", 16, 16, "Unidade"],
+        ["prod-029", "INS-006", "Gaze esterilizada", "Insumos", 19, 24, "Pacote"],
+        ["prod-030", "EMB-005", "Caixa presente P", "Embalagens", 68, 32, "Unidade"]
+    ].map(([id, codigo, nome, categoria, quantidade, estoqueMinimo, unidade]) => ({
+        id,
+        codigo,
+        nome,
+        categoria,
+        quantidade,
+        estoqueMinimo,
+        unidade,
+        ativo: true,
+        criadoEm: "2026-07-01T09:00:00.000Z",
+        atualizadoEm: agora,
+        arquivadoEm: null
+    }));
+
+    const produtoPorId = new Map(produtos.map((produto) => [produto.id, produto]));
+    const movimento = (id, produtoId, tipo, quantidade, saldoAntes, saldoDepois, observacao, criadoEm, filialId = "", pedidoId = "") => {
+        const produto = produtoPorId.get(produtoId);
+        return {
+            id,
+            produtoId,
+            produtoNome: produto?.nome || "Produto não identificado",
+            tipo,
+            quantidade,
+            unidade: produto?.unidade || "Unidade",
+            saldoAntes,
+            saldoDepois,
+            observacao,
+            filialId,
+            pedidoId,
+            criadoEm
+        };
+    };
+
+    return {
+        versao: 3,
+        produtos,
+        movimentacoes: [
+            movimento("mov-001", "prod-001", "entrada", 120, 66, 186, "Compra mensal para recompor matriz.", "2026-07-21T10:10:00.000Z"),
+            movimento("mov-002", "prod-011", "entrada", 48, 48, 96, "Recebimento fornecedor Blumenpack.", "2026-07-21T11:20:00.000Z"),
+            movimento("mov-003", "prod-006", "saida", 12, 76, 64, "Separação para vitrine da matriz.", "2026-07-21T14:35:00.000Z"),
+            movimento("mov-004", "prod-026", "saida", 14, 22, 8, "Uso interno e perdas registradas.", "2026-07-20T16:00:00.000Z"),
+            movimento("mov-005", "prod-016", "entrada", 500, 240, 740, "Reposição de sacolas personalizadas.", "2026-07-19T09:45:00.000Z"),
+            movimento("mov-006", "prod-003", "transferencia", 18, 96, 78, "Pedido aprovado e transferência registrada.", "2026-07-18T15:30:00.000Z", "blumenau", "ped-003"),
+            movimento("mov-007", "prod-018", "transferencia", 140, 1120, 980, "Pedido aprovado e transferência registrada.", "2026-07-18T15:31:00.000Z", "blumenau", "ped-003"),
+            movimento("mov-008", "prod-017", "transferencia", 80, 500, 420, "Pedido aprovado e transferência registrada.", "2026-07-17T10:05:00.000Z", "sinop", "ped-004"),
+            movimento("mov-009", "prod-024", "saida", 6, 42, 36, "Consumo administrativo da matriz.", "2026-07-16T13:00:00.000Z"),
+            movimento("mov-010", "prod-029", "saida", 9, 28, 19, "Baixa por uso em atendimento.", "2026-07-15T17:25:00.000Z")
+        ],
+        pedidos: [
+            {
+                id: "ped-001",
+                filialId: "blumenau",
+                itens: [
+                    { produtoId: "prod-005", produtoNome: "Omeprazol 20mg", unidade: "Caixa", estoqueInformado: 4, quantidadeSolicitada: 24, observacao: "Alta saída nos últimos dias." },
+                    { produtoId: "prod-010", produtoNome: "Pomada reparadora", unidade: "Unidade", estoqueInformado: 2, quantidadeSolicitada: 16, observacao: "Reposição de balcão." },
+                    { produtoId: "prod-029", produtoNome: "Gaze esterilizada", unidade: "Pacote", estoqueInformado: 3, quantidadeSolicitada: 30, observacao: "Atendimento semanal." }
+                ],
+                observacao: "Pedido semanal da filial Blumenau.",
+                observacaoMatriz: "",
+                situacao: "pendente",
+                criadoEm: "2026-07-22T08:40:00.000Z",
+                analisadoEm: null
+            },
+            {
+                id: "ped-002",
+                filialId: "lucas",
+                itens: [
+                    { produtoId: "prod-026", produtoNome: "Soro fisiológico 500ml", unidade: "Frasco", estoqueInformado: 1, quantidadeSolicitada: 28, observacao: "Matriz está com pouco saldo." },
+                    { produtoId: "prod-014", produtoNome: "Máscara cirúrgica", unidade: "Caixa", estoqueInformado: 5, quantidadeSolicitada: 20, observacao: "" }
+                ],
+                observacao: "Priorizar assim que houver compra.",
+                observacaoMatriz: "Aguardando compra para reposição da matriz.",
+                situacao: "aguardando_compra",
+                criadoEm: "2026-07-21T15:10:00.000Z",
+                analisadoEm: "2026-07-21T17:05:00.000Z"
+            },
+            {
+                id: "ped-003",
+                filialId: "blumenau",
+                itens: [
+                    { produtoId: "prod-003", produtoNome: "Ibuprofeno 600mg", unidade: "Caixa", estoqueInformado: 8, quantidadeSolicitada: 18, observacao: "" },
+                    { produtoId: "prod-018", produtoNome: "Etiqueta térmica", unidade: "Unidade", estoqueInformado: 60, quantidadeSolicitada: 140, observacao: "Impressora nova da filial." }
+                ],
+                observacao: "Pedido emergencial aprovado.",
+                observacaoMatriz: "Pedido aprovado e transferência registrada.",
+                situacao: "aprovado",
+                criadoEm: "2026-07-18T09:15:00.000Z",
+                analisadoEm: "2026-07-18T15:30:00.000Z"
+            },
+            {
+                id: "ped-004",
+                filialId: "sinop",
+                itens: [
+                    { produtoId: "prod-017", produtoNome: "Sacola M Therapeutica", unidade: "Unidade", estoqueInformado: 25, quantidadeSolicitada: 80, observacao: "Reposição para campanha local." }
+                ],
+                observacao: "Pedido aprovado.",
+                observacaoMatriz: "Pedido aprovado e transferência registrada.",
+                situacao: "aprovado",
+                criadoEm: "2026-07-17T08:50:00.000Z",
+                analisadoEm: "2026-07-17T10:05:00.000Z"
+            },
+            {
+                id: "ped-005",
+                filialId: "lucas",
+                itens: [
+                    { produtoId: "prod-023", produtoNome: "Papel A4", unidade: "Resma", estoqueInformado: 3, quantidadeSolicitada: 18, observacao: "Solicitação acima da média." }
+                ],
+                observacao: "Compra administrativa.",
+                observacaoMatriz: "Recusado: manter compra local de material administrativo neste ciclo.",
+                situacao: "recusado",
+                criadoEm: "2026-07-15T10:25:00.000Z",
+                analisadoEm: "2026-07-15T16:00:00.000Z"
+            },
+            {
+                id: "ped-006",
+                filialId: "sinop",
+                itens: [
+                    { produtoId: "prod-006", produtoNome: "Protetor solar FPS 50", unidade: "Unidade", estoqueInformado: 7, quantidadeSolicitada: 22, observacao: "Reposição para frente de loja." },
+                    { produtoId: "prod-027", produtoNome: "Vitamina C 1g", unidade: "Caixa", estoqueInformado: 9, quantidadeSolicitada: 30, observacao: "" },
+                    { produtoId: "prod-030", produtoNome: "Caixa presente P", unidade: "Unidade", estoqueInformado: 12, quantidadeSolicitada: 40, observacao: "Campanha de kits." }
+                ],
+                observacao: "Pedido de fim de semana.",
+                observacaoMatriz: "",
+                situacao: "pendente",
+                criadoEm: "2026-07-22T11:05:00.000Z",
+                analisadoEm: null
+            }
+        ],
+        filiais: FILIAIS_PADRAO.map((filial) => ({ ...filial })),
+        estoqueFiliais: {
+            "blumenau:prod-001": { quantidade: 34, atualizadoEm: "2026-07-20T10:00:00.000Z" },
+            "blumenau:prod-003": { quantidade: 26, atualizadoEm: "2026-07-18T15:30:00.000Z" },
+            "blumenau:prod-005": { quantidade: 4, atualizadoEm: "2026-07-22T08:40:00.000Z" },
+            "blumenau:prod-010": { quantidade: 2, atualizadoEm: "2026-07-22T08:40:00.000Z" },
+            "blumenau:prod-018": { quantidade: 200, atualizadoEm: "2026-07-18T15:31:00.000Z" },
+            "blumenau:prod-029": { quantidade: 3, atualizadoEm: "2026-07-22T08:40:00.000Z" },
+            "lucas:prod-002": { quantidade: 28, atualizadoEm: "2026-07-19T09:30:00.000Z" },
+            "lucas:prod-014": { quantidade: 5, atualizadoEm: "2026-07-21T15:10:00.000Z" },
+            "lucas:prod-023": { quantidade: 3, atualizadoEm: "2026-07-15T10:25:00.000Z" },
+            "lucas:prod-026": { quantidade: 1, atualizadoEm: "2026-07-21T15:10:00.000Z" },
+            "lucas:prod-028": { quantidade: 11, atualizadoEm: "2026-07-18T13:40:00.000Z" },
+            "sinop:prod-006": { quantidade: 7, atualizadoEm: "2026-07-22T11:05:00.000Z" },
+            "sinop:prod-009": { quantidade: 13, atualizadoEm: "2026-07-17T14:20:00.000Z" },
+            "sinop:prod-017": { quantidade: 105, atualizadoEm: "2026-07-17T10:05:00.000Z" },
+            "sinop:prod-027": { quantidade: 9, atualizadoEm: "2026-07-22T11:05:00.000Z" },
+            "sinop:prod-030": { quantidade: 12, atualizadoEm: "2026-07-22T11:05:00.000Z" }
+        },
+        atualizadoEm: agora
     };
 }
 
@@ -246,15 +431,29 @@ function carregarEstado() {
     const salvo = lerJSON(STORAGE_KEY, null);
 
     if (salvo) {
-        return normalizarEstado(salvo);
+        const normalizado = normalizarEstado(salvo);
+        const vazio = normalizado.produtos.length === 0
+            && normalizado.movimentacoes.length === 0
+            && normalizado.pedidos.length === 0
+            && salvo.demoDesativado !== true;
+
+        if (vazio) {
+            const demo = criarEstadoDemo();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(demo));
+            return demo;
+        }
+
+        return normalizado;
     }
 
     const produtosAntigos = lerJSON(LEGACY_PRODUCTS_KEY, []);
     const movimentacoesAntigas = lerJSON(LEGACY_MOVEMENTS_KEY, []);
-    const migrado = normalizarEstado({
+    const temDadosAntigos = (Array.isArray(produtosAntigos) && produtosAntigos.length > 0)
+        || (Array.isArray(movimentacoesAntigas) && movimentacoesAntigas.length > 0);
+    const migrado = temDadosAntigos ? normalizarEstado({
         produtos: Array.isArray(produtosAntigos) ? produtosAntigos : [],
         movimentacoes: Array.isArray(movimentacoesAntigas) ? movimentacoesAntigas : []
-    });
+    }) : criarEstadoDemo();
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(migrado));
     return migrado;
@@ -1022,12 +1221,26 @@ function limparDados() {
 
     if (!confirmou) return;
 
-    estado = estadoPadrao();
+    estado = { ...estadoPadrao(), demoDesativado: true };
     salvarEstado();
     produtoSelecionadoMovimentacao = "";
     renderizarTudo();
     navegar("dashboard");
     notificar("Dados locais removidos.");
+}
+
+function carregarDadosDemo() {
+    const confirmou = window.confirm("Carregar dados de demonstração? Isso substituirá produtos, pedidos e histórico salvos neste navegador.");
+
+    if (!confirmou) return;
+
+    estado = criarEstadoDemo();
+    salvarEstado();
+    produtoSelecionadoMovimentacao = "";
+    itensDoPedidoAtual = [];
+    renderizarTudo();
+    navegar("dashboard");
+    notificar("Dados de demonstração carregados.");
 }
 
 function lidarComAcao(acao, elemento) {
@@ -1391,6 +1604,7 @@ elementos.botaoEnviarPedidoLista.addEventListener("click", () => {
 elementos.botaoIrAlertas.addEventListener("click", () => navegar(estaNoPortalFilial() ? "estoque-filial" : "estoque-baixo"));
 elementos.botaoExportar.addEventListener("click", exportarBackup);
 elementos.arquivoImportar.addEventListener("change", importarBackup);
+elementos.botaoDadosDemo.addEventListener("click", carregarDadosDemo);
 elementos.botaoLimparDados.addEventListener("click", limparDados);
 
 elementos.seletorPortal.value = portalAtual;
