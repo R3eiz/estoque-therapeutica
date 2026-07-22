@@ -262,8 +262,10 @@ function criarEstadoDemo() {
                     { produtoId: "prod-018", produtoNome: "Etiqueta térmica", unidade: "Unidade", estoqueInformado: 60, quantidadeSolicitada: 140, observacao: "Impressora nova da filial." }
                 ],
                 observacao: "Pedido emergencial aprovado.",
-                observacaoMatriz: "Pedido aprovado e transferência registrada.",
-                situacao: "aprovado",
+                observacaoMatriz: "Pedido aprovado. Entrega prevista: 23/07/2026.",
+                situacao: "em_transito",
+                entregaPrevista: "2026-07-23",
+                recebidoEm: null,
                 criadoEm: "2026-07-18T09:15:00.000Z",
                 analisadoEm: "2026-07-18T15:30:00.000Z"
             },
@@ -274,8 +276,10 @@ function criarEstadoDemo() {
                     { produtoId: "prod-017", produtoNome: "Sacola M Therapeutica", unidade: "Unidade", estoqueInformado: 25, quantidadeSolicitada: 80, observacao: "Reposição para campanha local." }
                 ],
                 observacao: "Pedido aprovado.",
-                observacaoMatriz: "Pedido aprovado e transferência registrada.",
-                situacao: "aprovado",
+                observacaoMatriz: "Pedido aprovado e recebido pela filial.",
+                situacao: "recebido",
+                entregaPrevista: "2026-07-19",
+                recebidoEm: "2026-07-19T11:30:00.000Z",
                 criadoEm: "2026-07-17T08:50:00.000Z",
                 analisadoEm: "2026-07-17T10:05:00.000Z"
             },
@@ -309,10 +313,10 @@ function criarEstadoDemo() {
         filiais: FILIAIS_PADRAO.map((filial) => ({ ...filial })),
         estoqueFiliais: {
             "blumenau:prod-001": { quantidade: 34, atualizadoEm: "2026-07-20T10:00:00.000Z" },
-            "blumenau:prod-003": { quantidade: 26, atualizadoEm: "2026-07-18T15:30:00.000Z" },
+            "blumenau:prod-003": { quantidade: 8, atualizadoEm: "2026-07-18T09:15:00.000Z" },
             "blumenau:prod-005": { quantidade: 4, atualizadoEm: "2026-07-22T08:40:00.000Z" },
             "blumenau:prod-010": { quantidade: 2, atualizadoEm: "2026-07-22T08:40:00.000Z" },
-            "blumenau:prod-018": { quantidade: 200, atualizadoEm: "2026-07-18T15:31:00.000Z" },
+            "blumenau:prod-018": { quantidade: 60, atualizadoEm: "2026-07-18T09:15:00.000Z" },
             "blumenau:prod-029": { quantidade: 3, atualizadoEm: "2026-07-22T08:40:00.000Z" },
             "lucas:prod-002": { quantidade: 28, atualizadoEm: "2026-07-19T09:30:00.000Z" },
             "lucas:prod-014": { quantidade: 5, atualizadoEm: "2026-07-21T15:10:00.000Z" },
@@ -377,9 +381,10 @@ function normalizarMovimentacao(movimentacao) {
 }
 
 function normalizarPedido(pedido) {
-    const situacoesValidas = ["pendente", "aguardando_compra", "aprovado", "recusado"];
-    const situacao = situacoesValidas.includes(pedido?.situacao ?? pedido?.status)
-        ? pedido.situacao ?? pedido.status
+    const situacoesValidas = ["pendente", "aguardando_compra", "em_transito", "recebido", "aprovado", "recusado"];
+    const statusRecebido = pedido?.situacao ?? pedido?.status;
+    const situacao = situacoesValidas.includes(statusRecebido)
+        ? (statusRecebido === "aprovado" ? "recebido" : statusRecebido)
         : "pendente";
 
     const itensRecebidos = Array.isArray(pedido?.itens) ? pedido.itens : [pedido];
@@ -401,6 +406,8 @@ function normalizarPedido(pedido) {
         observacao: String(pedido?.observacao ?? pedido?.note ?? ""),
         observacaoMatriz: String(pedido?.observacaoMatriz ?? pedido?.managerNote ?? ""),
         situacao,
+        entregaPrevista: pedido?.entregaPrevista ?? pedido?.deliveryDate ?? "",
+        recebidoEm: pedido?.recebidoEm ?? pedido?.receivedAt ?? null,
         criadoEm: pedido?.criadoEm ?? pedido?.createdAt ?? new Date().toISOString(),
         analisadoEm: pedido?.analisadoEm ?? pedido?.handledAt ?? null
     };
@@ -490,6 +497,17 @@ function formatarData(valor) {
     }).format(data);
 }
 
+function formatarDataSimples(valor) {
+    if (!valor) return "";
+    const data = new Date(`${valor}T12:00:00`);
+
+    if (Number.isNaN(data.getTime())) {
+        return "";
+    }
+
+    return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" }).format(data);
+}
+
 function produtosAtivos() {
     return estado.produtos.filter((produto) => produto.ativo);
 }
@@ -515,7 +533,7 @@ function itensDoPedido(pedido) {
 }
 
 function pedidosAbertos() {
-    return estado.pedidos.filter((pedido) => pedido.situacao === "pendente" || pedido.situacao === "aguardando_compra");
+    return estado.pedidos.filter((pedido) => ["pendente", "aguardando_compra", "em_transito"].includes(pedido.situacao));
 }
 
 function produtosComEstoqueBaixo() {
@@ -555,7 +573,9 @@ function textoSituacaoPedido(situacao) {
     return {
         pendente: "Pendente",
         aguardando_compra: "Aguardando compra",
-        aprovado: "Aprovado",
+        em_transito: "A caminho",
+        recebido: "Recebido",
+        aprovado: "Recebido",
         recusado: "Recusado"
     }[situacao] || "Pendente";
 }
@@ -822,6 +842,7 @@ function renderizarPedidos() {
             const filial = buscarFilial(pedido.filialId);
             const aberto = pedido.situacao === "pendente" || pedido.situacao === "aguardando_compra";
             const itens = itensDoPedido(pedido);
+            const entrega = pedido.entregaPrevista ? `Entrega prevista: ${formatarDataSimples(pedido.entregaPrevista)}` : "";
             const listaItens = itens.map((item) => `
                 <div class="item-pedido-resumo">
                     <strong>${escaparHTML(item.produtoNome)}</strong>
@@ -836,14 +857,14 @@ function renderizarPedidos() {
                         <button type="button" class="botao-acao acao-perigo" data-acao="recusar-pedido" data-pedido-id="${pedido.id}">Recusar</button>
                     </div>
                 `
-                : `<span class="detalhe-celula">${pedido.observacaoMatriz ? escaparHTML(pedido.observacaoMatriz) : "Finalizado"}</span>`;
+                : `<span class="detalhe-celula">${[pedido.observacaoMatriz, entrega].filter(Boolean).map(escaparHTML).join(" · ") || "Finalizado"}</span>`;
 
             return `
                 <tr>
                     <td>${formatarData(pedido.criadoEm)}</td>
                     <td><strong>${escaparHTML(filial?.nome || "Filial não identificada")}</strong></td>
                     <td>${listaItens}${pedido.observacao ? `<span class="detalhe-celula">${escaparHTML(pedido.observacao)}</span>` : ""}</td>
-                    <td><span class="selo-tipo ${classeSituacaoPedido(pedido.situacao)}">${textoSituacaoPedido(pedido.situacao)}</span></td>
+                    <td><span class="selo-tipo ${classeSituacaoPedido(pedido.situacao)}">${textoSituacaoPedido(pedido.situacao)}</span>${entrega ? `<span class="detalhe-celula">${escaparHTML(entrega)}</span>` : ""}</td>
                     <td>${acoes}</td>
                 </tr>
             `;
@@ -854,7 +875,7 @@ function renderizarPedidos() {
 function renderizarFiliais() {
     elementos.listaFiliais.innerHTML = estado.filiais.map((filial) => {
         const pedidos = estado.pedidos.filter((pedido) => pedido.filialId === filial.id);
-        const abertos = pedidos.filter((pedido) => pedido.situacao === "pendente" || pedido.situacao === "aguardando_compra").length;
+        const abertos = pedidos.filter((pedido) => ["pendente", "aguardando_compra", "em_transito"].includes(pedido.situacao)).length;
         const produtosControlados = Object.keys(estado.estoqueFiliais).filter((chave) => chave.startsWith(`${filial.id}:`)).length;
 
         return `
@@ -909,7 +930,7 @@ function renderizarPortalFilial() {
     const chavesDaFilial = Object.keys(estado.estoqueFiliais).filter((chave) => chave.startsWith(`${filial.id}:`));
     const quantidadeConhecida = chavesDaFilial.reduce((total, chave) => total + numeroInteiroNaoNegativo(estado.estoqueFiliais[chave]?.quantidade ?? estado.estoqueFiliais[chave]), 0);
     const pedidosDaFilial = estado.pedidos.filter((pedido) => pedido.filialId === filial.id);
-    const abertos = pedidosDaFilial.filter((pedido) => pedido.situacao === "pendente" || pedido.situacao === "aguardando_compra").length;
+    const abertos = pedidosDaFilial.filter((pedido) => ["pendente", "aguardando_compra", "em_transito"].includes(pedido.situacao)).length;
 
     elementos.tituloPortalFilial.textContent = `Portal Therapeutica · ${filial.nome}`;
     elementos.tituloEstoqueFilial.textContent = `Estoque da filial ${filial.nome}`;
@@ -953,26 +974,32 @@ function renderizarPortalFilial() {
     renderizarCarrinhoPedido();
 
     elementos.listaMeusPedidos.innerHTML = pedidosDaFilial.length
-        ? pedidosDaFilial.sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm)).map((pedido) => `
-            <article class="pedido-filial-card">
-                <div class="cabecalho-pedido-filial">
-                    <div>
-                        <h3>Pedido de ${formatarData(pedido.criadoEm)}</h3>
-                        <p>${pedido.observacao ? escaparHTML(pedido.observacao) : "Sem observação geral."}</p>
-                    </div>
-                    <span class="selo-tipo ${classeSituacaoPedido(pedido.situacao)}">${textoSituacaoPedido(pedido.situacao)}</span>
-                </div>
-                <div class="itens-pedido-resumo">
-                    ${itensDoPedido(pedido).map((item) => `
-                        <div class="item-pedido-resumo">
-                            <strong>${escaparHTML(item.produtoNome)}</strong>
-                            <span>Estoque informado: ${formatarNumero(item.estoqueInformado)} · Solicitado: ${formatarNumero(item.quantidadeSolicitada)} ${escaparHTML(item.unidade)}</span>
+        ? pedidosDaFilial.sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm)).map((pedido) => {
+            const entrega = pedido.entregaPrevista ? formatarDataSimples(pedido.entregaPrevista) : "";
+            return `
+                <article class="pedido-filial-card">
+                    <div class="cabecalho-pedido-filial">
+                        <div>
+                            <h3>Pedido de ${formatarData(pedido.criadoEm)}</h3>
+                            <p>${pedido.observacao ? escaparHTML(pedido.observacao) : "Sem observação geral."}</p>
                         </div>
-                    `).join("")}
-                </div>
-                ${pedido.observacaoMatriz ? `<p><strong>Resposta da matriz:</strong> ${escaparHTML(pedido.observacaoMatriz)}</p>` : ""}
-            </article>
-        `).join("")
+                        <span class="selo-tipo ${classeSituacaoPedido(pedido.situacao)}">${textoSituacaoPedido(pedido.situacao)}</span>
+                    </div>
+                    <div class="itens-pedido-resumo">
+                        ${itensDoPedido(pedido).map((item) => `
+                            <div class="item-pedido-resumo">
+                                <strong>${escaparHTML(item.produtoNome)}</strong>
+                                <span>Estoque informado: ${formatarNumero(item.estoqueInformado)} · Solicitado: ${formatarNumero(item.quantidadeSolicitada)} ${escaparHTML(item.unidade)}</span>
+                            </div>
+                        `).join("")}
+                    </div>
+                    ${entrega ? `<p><strong>Entrega prevista:</strong> ${escaparHTML(entrega)}</p>` : ""}
+                    ${pedido.recebidoEm ? `<p><strong>Recebido em:</strong> ${formatarData(pedido.recebidoEm)}</p>` : ""}
+                    ${pedido.observacaoMatriz ? `<p><strong>Resposta da matriz:</strong> ${escaparHTML(pedido.observacaoMatriz)}</p>` : ""}
+                    ${pedido.situacao === "em_transito" ? `<button type="button" class="botao-principal" data-acao="confirmar-recebimento" data-pedido-id="${pedido.id}">Confirmar recebimento</button>` : ""}
+                </article>
+            `;
+        }).join("")
         : "<p class=\"resumo-vazio\">Nenhum pedido foi enviado por esta filial.</p>";
 }
 
@@ -1097,13 +1124,26 @@ function aprovarPedido(pedidoId) {
     }
 
     const filial = buscarFilial(pedido.filialId);
-    const confirmou = window.confirm(`Aprovar a transferência de ${itens.length} item(ns) para ${filial?.nome || "a filial"}?`);
+    const entregaPrevista = window.prompt(`Informe a data prevista de entrega para ${filial?.nome || "a filial"} (AAAA-MM-DD):`, new Date().toISOString().slice(0, 10));
+
+    if (entregaPrevista === null) return;
+
+    const dataEntrega = entregaPrevista.trim();
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dataEntrega) || Number.isNaN(new Date(`${dataEntrega}T12:00:00`).getTime())) {
+        notificar("Informe a data de entrega no formato AAAA-MM-DD.", "erro");
+        return;
+    }
+
+    const confirmou = window.confirm(`Aprovar o envio de ${itens.length} item(ns) para ${filial?.nome || "a filial"} com entrega prevista em ${formatarDataSimples(dataEntrega)}?`);
 
     if (!confirmou) return;
 
-    pedido.situacao = "aprovado";
+    pedido.situacao = "em_transito";
+    pedido.entregaPrevista = dataEntrega;
+    pedido.recebidoEm = null;
     pedido.analisadoEm = new Date().toISOString();
-    pedido.observacaoMatriz = "Pedido aprovado e transferência registrada.";
+    pedido.observacaoMatriz = `Pedido aprovado. Entrega prevista: ${formatarDataSimples(dataEntrega)}.`;
 
     itens.forEach((item) => {
         const produto = buscarProduto(item.produtoId);
@@ -1111,10 +1151,6 @@ function aprovarPedido(pedidoId) {
 
         produto.quantidade -= item.quantidadeSolicitada;
         produto.atualizadoEm = new Date().toISOString();
-        estado.estoqueFiliais[chaveEstoqueFilial(pedido.filialId, produto.id)] = {
-            quantidade: item.estoqueInformado + item.quantidadeSolicitada,
-            atualizadoEm: new Date().toISOString()
-        };
 
         registrarMovimentacao({
             produto,
@@ -1122,7 +1158,7 @@ function aprovarPedido(pedidoId) {
             quantidade: item.quantidadeSolicitada,
             saldoAntes,
             saldoDepois: produto.quantidade,
-            observacao: item.observacao || pedido.observacao || "Transferência aprovada para filial.",
+            observacao: item.observacao || pedido.observacao || `Envio aprovado para entrega em ${formatarDataSimples(dataEntrega)}.`,
             filialId: pedido.filialId,
             pedidoId: pedido.id
         });
@@ -1130,7 +1166,41 @@ function aprovarPedido(pedidoId) {
 
     salvarEstado();
     renderizarTudo();
-    notificar("Pedido aprovado e estoque central atualizado.");
+    notificar("Pedido aprovado. Estoque da matriz baixado e entrega informada à filial.");
+}
+
+function confirmarRecebimentoPedido(pedidoId) {
+    const pedido = estado.pedidos.find((item) => item.id === pedidoId);
+    const filial = filialAtual();
+
+    if (!pedido || pedido.situacao !== "em_transito" || !filial || pedido.filialId !== filial.id) return;
+
+    const confirmou = window.confirm("Confirmar que todos os produtos deste pedido chegaram na filial?");
+
+    if (!confirmou) return;
+
+    const agora = new Date().toISOString();
+
+    itensDoPedido(pedido).forEach((item) => {
+        const produto = buscarProduto(item.produtoId);
+        if (!produto) return;
+
+        const chave = chaveEstoqueFilial(pedido.filialId, produto.id);
+        const registroAtual = estado.estoqueFiliais[chave];
+        const saldoAtual = numeroInteiroNaoNegativo(registroAtual?.quantidade ?? registroAtual ?? item.estoqueInformado);
+
+        estado.estoqueFiliais[chave] = {
+            quantidade: saldoAtual + item.quantidadeSolicitada,
+            atualizadoEm: agora
+        };
+    });
+
+    pedido.situacao = "recebido";
+    pedido.recebidoEm = agora;
+    pedido.observacaoMatriz = pedido.observacaoMatriz || "Pedido recebido pela filial.";
+    salvarEstado();
+    renderizarTudo();
+    notificar("Recebimento confirmado. Estoque da filial atualizado.");
 }
 
 function marcarAguardandoCompra(pedidoId) {
@@ -1296,6 +1366,9 @@ function lidarComAcao(acao, elemento) {
             break;
         case "aguardar-compra":
             marcarAguardandoCompra(elemento.dataset.pedidoId);
+            break;
+        case "confirmar-recebimento":
+            confirmarRecebimentoPedido(elemento.dataset.pedidoId);
             break;
         case "recusar-pedido":
             recusarPedido(elemento.dataset.pedidoId);

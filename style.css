@@ -683,7 +683,8 @@ tbody tr:last-child td {
 
 .status-normal,
 .tipo-entrada,
-.tipo-aprovado {
+.tipo-aprovado,
+.tipo-recebido {
     color: #2f744e;
     background: var(--verde-claro);
 }
@@ -703,6 +704,7 @@ tbody tr:last-child td {
 
 .tipo-transferencia,
 .tipo-pendente,
+.tipo-em_transito,
 .tipo-ajuste {
     color: var(--amarelo);
     background: var(--amarelo-claro);
